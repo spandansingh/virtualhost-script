@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+
+rootdir="/home/spandy/Dropbox/Websites"
+
+function create {
+
+	name=$1
+	newdir=$2
+
+	if [ "`grep -R $name /etc/hosts`" != "" ]; then
+	remove $1
+	checkExit $?
+	fi
+	
+	if [ ! -d $rootdir ]; then
+		echo "$rootdir is not a directory"
+		exit 1
+	fi
+
+	webrootdir="$rootdir$newdir"
+
+	if [ ! -d $webrootdir ]; then
+		echo "$webrootdir is not a directory"
+		exit 1
+	fi
+
+	printf "
+	<VirtualHost *:80>
+	    ServerAdmin admin@$name
+	    ServerName $name
+	    ServerAlias www.$name
+	    DocumentRoot $webrootdir
+	    ErrorLog \${APACHE_LOG_DIR}/error.log
+	    CustomLog \${APACHE_LOG_DIR}/access.log combined
+	</VirtualHost>
+
+	" > /etc/apache2/sites-available/$name.conf
+	checkExit $?
+
+	a2ensite $name.conf
+	checkExit $?
+	
+	printf "
+	127.0.0.1 $name" >> /etc/hosts
+	checkExit $?
+}
+
+function remove {
+	name=$1
+	
+	a2dissite $name
+	checkExit $?
+	sed -i -e /$name/d /etc/hosts
+	checkExit $?
+	rm /etc/apache2/sites-available/$name.conf
+	checkExit $?
+
+}
+
+function list {
+	grep -R '127.0.0.1 ' /etc/hosts | cut -d " " -f2
+	echo " "
+}
+
+function checkExit {
+	if [ $1 -ne 0 ] 
+		then exit $1 
+	fi
+}
+
+# Starting Of Script 
+
+usage=" Usage: virtualhost <command> (create,remove,list)"
+
+if [ "$1" = "" ]; then
+    echo $usage
+    exit 1
+fi
+
+if [ "$1" = "create" ]; then
+	
+	usage=" Usage: virtualhost create <sitename> <rootdir>"
+
+	if [ "$2" = "" -o "$3" = "" ]; then
+    echo $usage
+    exit 1
+	fi
+
+	create $2 $3
+	checkExit $?
+	service apache2 restart
+	checkExit $?
+	echo "$name successfully created"
+
+elif [ "$1" = "remove" ]; then
+	usage=" Usage: virtualhost remove <sitename> <rootdir>"
+
+	if [ "$2" = "" ]; then
+    echo $usage
+    exit 1
+	fi
+
+	remove $2
+	checkExit $?
+	service apache2 restart
+	checkExit $?
+	echo "$name successfully removed" 
+
+elif [ "$1" = "list" ]; then
+	echo "List of virtual domains:
+	"
+	list $2
+	checkExit $?
+else
+	echo "$1 is not a valid command"
+	echo $usage
+    exit 1
+fi 
+
+exit 0
