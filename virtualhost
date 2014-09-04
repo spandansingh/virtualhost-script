@@ -1,24 +1,15 @@
 #!/usr/bin/env bash
 
-rootdir="/home/spandy/Dropbox/Websites"
-
 function create {
 
 	name=$1
-	newdir=$2
+	webrootdir=$2
 
 	if [ "`grep -R $name /etc/hosts`" != "" ]; then
 	remove $1
 	checkExit $?
 	fi
 	
-	if [ ! -d $rootdir ]; then
-		echo "$rootdir is not a directory"
-		exit 1
-	fi
-
-	webrootdir="$rootdir$newdir"
-
 	if [ ! -d $webrootdir ]; then
 		echo "$webrootdir is not a directory"
 		exit 1
@@ -79,7 +70,7 @@ fi
 
 if [ "$1" = "create" ]; then
 	
-	usage=" Usage: virtualhost create <sitename> <rootdir>"
+	usage=" Usage: virtualhost create <sitename> <path>"
 
 	if [ "$2" = "" -o "$3" = "" ]; then
     echo $usage
@@ -93,7 +84,7 @@ if [ "$1" = "create" ]; then
 	echo "$name successfully created"
 
 elif [ "$1" = "remove" ]; then
-	usage=" Usage: virtualhost remove <sitename> <rootdir>"
+	usage=" Usage: virtualhost remove <sitename>"
 
 	if [ "$2" = "" ]; then
     echo $usage
