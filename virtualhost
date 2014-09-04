@@ -23,6 +23,11 @@ function create {
 	    DocumentRoot $webrootdir
 	    ErrorLog \${APACHE_LOG_DIR}/error.log
 	    CustomLog \${APACHE_LOG_DIR}/access.log combined
+	    <Directory $webrootdir>
+			Options Indexes FollowSymLinks
+			AllowOverride FileInfo
+			Require all granted
+		</Directory>
 	</VirtualHost>
 
 	" > /etc/apache2/sites-available/$name.conf
